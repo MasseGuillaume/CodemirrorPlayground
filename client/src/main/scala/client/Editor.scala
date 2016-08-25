@@ -2,66 +2,57 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
-import scalacss.Defaults._
-import scalacss.ScalaCssReact._
-
-import org.scalajs.dom.raw.Element
+import org.scalajs.dom.raw.{Element, HTMLTextAreaElement}
 import org.scalajs.dom
 
 import scala.scalajs._
 
 object Editor {
-  object Style extends StyleSheet.Inline {
-    import dsl._
 
-    val code = style(
-      height(100.%%),
-      margin.`0`
-    )
+  private def options(code: String): codemirror.Options = {
+    val isMac = dom.window.navigator.userAgent.contains("Mac")
+    val ctrl = if(isMac) "Cmd" else "Ctrl"
+  
+    js.Dictionary[Any](
+      "value"                     -> code,
+      "mode"                      -> "text/x-scala",
+      "autofocus"                 -> true,
+      "lineNumbers"               -> false,
+      "lineWrapping"              -> false,
+      "tabSize"                   -> 2,
+      "indentWithTabs"            -> false,
+      "theme"                     -> "solarized light",
+      "smartIndent"               -> true,
+      "keyMap"                    -> "sublime",
+      "scrollPastEnd"             -> true,
+      "scrollbarStyle"            -> "simple",
+      "autoCloseBrackets"         -> true,
+      "matchBrackets"             -> true,
+      "showCursorWhenSelecting"   -> true,
+      "autofocus"                 -> true,
+      "highlightSelectionMatches" -> js.Dictionary("showToken" -> js.Dynamic.global.RegExp("\\w")),
+      "extraKeys"                 -> js.Dictionary(
+        "Tab"          -> "specialTab",
+        s"$ctrl-l"     -> null,
+        s"$ctrl-Space" -> "autocomplete",
+         "."           -> "autocompleteDot",
+        s"$ctrl-."     -> "typeAt",
+        s"$ctrl-Enter" -> "run",
+        "F1"           -> "help",
+        "F2"           -> "solarizedToggle",
+        "F7"           -> "share"
+      )
+    ).asInstanceOf[codemirror.Options]
   }
 
   private[Editor] case class EditorState(editor: Option[codemirror.Editor] = None)
   private[Editor] class Backend(scope: BackendScope[App.State, EditorState]) {
     private def mount(el: Element) = {
       scope.props.map{props =>
-        val isMac = dom.window.navigator.userAgent.contains("Mac")
-        val ctrl = if(isMac) "Cmd" else "Ctrl"
-
-        codemirror.CodeMirror(
-          el,
-          js.Dictionary(
-            "value" -> props.code,
-            "mode" -> "text/x-scala",
-            "autofocus" -> true,
-            "lineNumbers" -> false,
-            "lineWrapping" -> false,
-            "tabSize" -> 2,
-            "indentWithTabs" -> false,
-            "theme" -> "solarized dark",
-            "smartIndent" -> true,
-            "keyMap" -> "sublime",
-            "scrollPastEnd" -> true,
-            "scrollbarStyle" -> "simple",
-            "extraKeys" -> js.Dictionary(
-              "Tab"          -> "specialTab",
-              s"$ctrl-l"     -> null,
-              s"$ctrl-Space" -> "autocomplete",
-               "."           -> "autocompleteDot",
-              s"$ctrl-."     -> "typeAt",
-              s"$ctrl-Enter" -> "run",
-              "F1"           -> "help",
-              "F2"           -> "solarizedToggle",
-              "F7"           -> "share"
-            ),
-            "autoCloseBrackets" -> true,
-            "matchBrackets" -> true,
-            "showCursorWhenSelecting" -> true,
-            "autofocus" -> true,
-            "highlightSelectionMatches" -> js.Dictionary(
-              "showToken" -> js.Dynamic.global.RegExp("\\w")
-            )
-          ).asInstanceOf[codemirror.Options]
-        )
+        el match {
+          case e: HTMLTextAreaElement => codemirror.CodeMirror.fromTextArea(e, options(props.code))
+          case _ => ???
+        }
       }
     }
 
@@ -74,17 +65,18 @@ object Editor {
   val component = ReactComponentB[App.State]("AceEditor")
     .initialState(EditorState())
     .backend(new Backend(_))
-    .render( _ => pre(Style.code))
+    .render( _ => textarea())
     .componentWillReceiveProps(v => CallbackTo[Unit]{
       val current = v.currentProps
       val next = v.nextProps
       val state = v.currentState
 
       if(current.dark != next.dark) {
-        val label = 
+        val theme = 
           if(next.dark) "dark"
           else "light"
-        // state.editor.foreach(_.setTheme(s"ace/theme/solarized_$label"))
+
+        state.editor.foreach(_.setOption("theme", s"solarized $theme"))
       }
 
       if(current.code != next.code) {

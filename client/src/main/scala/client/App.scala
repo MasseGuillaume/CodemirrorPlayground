@@ -2,42 +2,7 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
-import scalacss.Defaults._
-import scalacss.ScalaCssReact._
-
 object App {
-
-  object Style extends StyleSheet.Inline {
-    import dsl._
-    val container = style(height(100.%%))
-    
-
-    private val sideBarWidth = 400.px
-
-    val side = style(
-      position.absolute,
-      top.`0`,
-      right.`0`,
-      transition := "width 0.3s"
-    )
-
-    val sideOpen = style(
-      width(sideBarWidth),
-      display.block
-    )
-    val sideClosed = style(
-      width.`0`,
-      display.none
-    )
-
-    val editor = style(
-      height(100.%%),
-      transition := "margin-right 0.3s"
-    )
-    val editorSideOpen = style(marginRight(sideBarWidth))
-    val editorSideClosed = style(marginRight.`0`)
-  }
-
   case class Annotation(
     row: Int,
     column: Int,
@@ -46,8 +11,8 @@ object App {
   )
 
   case class State(
+    code: String,
     dark: Boolean = false,
-    code: String = "",
     annotations: List[Annotation] = Nil,
     sideBarClosed: Boolean = false) {
 
@@ -120,19 +85,13 @@ object Main {
     .initialState(State(code = defaultCode))
     .backend(new Backend(_))
     .renderPS((scope, _, state) => {
-      import Style._
-
       val sideStyle = 
-        if(state.sideBarClosed) sideClosed
-        else sideOpen
+        if(state.sideBarClosed) "sidebar-closed"
+        else "sidebar-open"
 
-      val editorSideStyle = 
-        if(state.sideBarClosed) editorSideClosed
-        else editorSideOpen
-
-      div(container)(
-        div(editor, editorSideStyle)(Editor(state)),
-        div(side, sideStyle)(SideBar((state, scope.backend)))
+      div(`class` := "app")(
+        div(`class` := s"editor $sideStyle")(Editor(state)),
+        div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
       )
     })
     .build

@@ -57,19 +57,7 @@ lazy val codemirror = project
         "addon/search/searchcursor",
         "keymap/sublime",
         "mode/clike/clike"
-      ).map(codemirrorD)
-    
-
-    //  Seq(
-
-
-    //   "org.webjars.bower"  % "codemirror" % "5.18.2" % "compile" / "codemirror.js" minified "codemirror.js"
-    //   // codemirrorD("ace", "AceAjax"),
-    //   // codemirrorD("mode-scala", "AceScala", "ace"),
-    //   // codemirrorD("theme-solarized_dark", "AceSolarizedDark", "ace"),
-    //   // codemirrorD("theme-solarized_light", "AceSolarizedLight", "ace")
-    // ),
-    ,
+      ).map(codemirrorD),
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   )
   .enablePlugins(ScalaJSPlugin)
@@ -77,26 +65,23 @@ lazy val codemirror = project
 lazy val client = project
   .settings(baseSettings)
   .settings(
+    JsEngineKeys.engineType := JsEngineKeys.EngineType.Node,
     skip in packageJSDependencies := false,
     jsDependencies ++= Seq(
       react("react-with-addons", "React"),
       react("react-dom", "ReactDOM", "react-with-addons"),
       react("react-dom-server", "ReactDOMServer", "react-dom")
     ),
-    libraryDependencies ++= Seq(
-      "com.github.japgolly.scalacss"      %%% "core"      % "0.4.1",
-      "com.github.japgolly.scalacss"      %%% "ext-react" % "0.4.1",
-      "com.github.japgolly.scalajs-react" %%% "extra"     % "0.11.1"
-    )
-
+    libraryDependencies += "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1"
   )
-  .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror)
 
 lazy val web = project
   .settings(baseSettings)
   .settings(packageScalaJS(client))
   .settings(
+    products in Compile <<= (products in Compile).dependsOn(WebKeys.assets in Assets),
     reStart <<= reStart.dependsOn(WebKeys.assets in Assets),
     unmanagedResourceDirectories in Compile += (WebKeys.public in Assets).value,
     libraryDependencies += "com.typesafe.akka" %% "akka-http-experimental" % "2.4.9"
