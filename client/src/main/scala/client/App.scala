@@ -2,18 +2,24 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
-object App {
-  case class Annotation(
-    row: Int,
-    column: Int,
-    text: String,
-    `type`: String
-  )
+sealed trait Severity
+final case object Info extends Severity
+final case object Warning extends Severity
+final case object Error extends Severity
 
+case class Position(start: Int, end: Int)
+
+case class CompilationInfo(
+  severity: Severity,
+  position: Position,
+  message: String
+)
+
+object App {
   case class State(
     code: String,
     dark: Boolean = false,
-    annotations: List[Annotation] = Nil,
+    compilationInfos: Set[CompilationInfo] = Set(),
     sideBarClosed: Boolean = false) {
 
     def toogleTheme = copy(dark = !dark)
@@ -21,16 +27,12 @@ object App {
   }
 
   class Backend(scope: BackendScope[_, State]) {
+    def codeChange(newCode: String)      = scope.modState(_.copy(code = newCode))
     def toogleTheme(e: ReactEventI)   = scope.modState(_.toogleTheme)
     def toogleSidebar(e: ReactEventI) = scope.modState(_.toogleSidebar)
     def templateOne(e: ReactEventI)   = scope.modState(_.copy(code = "code 1"))
     def templateTwo(e: ReactEventI)   = scope.modState(_.copy(code = "code 2"))
     def templateThree(e: ReactEventI) = scope.modState(_.copy(code = "code 3"))
-    def error(e: ReactEventI)         = scope.modState(_.copy(annotations = 
-      List(
-        Annotation(row = 1, column = 0, text = "Unused import", `type` = "error")
-      )
-    ))
   }
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
@@ -42,7 +44,7 @@ object App {
         li(button(onClick ==> backend.templateOne)("template 1")),
         li(button(onClick ==> backend.templateTwo)("template 2")),
         li(button(onClick ==> backend.templateThree)("template 3")),
-        li(button(onClick ==> backend.error)("error"))
+        li(pre(state.code))
       )
     }
     .build
@@ -90,7 +92,7 @@ object Main {
         else "sidebar-open"
 
       div(`class` := "app")(
-        div(`class` := s"editor $sideStyle")(Editor(state)),
+        div(`class` := s"editor $sideStyle")(Editor(state, scope.backend)),
         div(`class` := s"sidebar $sideStyle")(SideBar((state, scope.backend)))
       )
     })

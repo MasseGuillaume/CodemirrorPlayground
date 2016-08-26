@@ -24,7 +24,10 @@ body.pc kbd.mac { display: none }
 
 @margin: 24px;
 .CodeMirror-lines {
-    padding: @margin;
+  padding: @margin;
+  .cm-tab {
+    visibility: hidden;
+  }
 }
 .CodeMirror-linenumber{
   margin-left: -@margin;
