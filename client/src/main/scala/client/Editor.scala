@@ -82,8 +82,6 @@ object Editor {
       scope.props.flatMap{ case (props, backend) =>
         val editor = codemirror.CodeMirror.fromTextArea(codemirrorTextarea(scope).get, options(props.dark))
 
-
-
         editor.onChange((_, _) => 
           backend.codeChange(editor.getDoc().getValue()).runNow
         )
@@ -114,17 +112,14 @@ object Editor {
 
     def setAnnotations() = {
       val added = next.compilationInfos -- current.compilationInfos
+
       // Callback(
       val removed = next.compilationInfos -- current.compilationInfos
       // Callback(
       scope.modState(s => s.copy(annotations = Map()))
     }
 
-    for {
-      _ <- Callback(setTheme())
-      _ <- Callback(setCode())
-      _ <- setAnnotations()
-    } yield ()
+    Callback(setTheme()) >> Callback(setCode()) >> setAnnotations()
   }
 
   val component = ReactComponentB[(App.State, App.Backend)]("CodemirrorEditor")
