@@ -2,19 +2,6 @@ package client
 
 import japgolly.scalajs.react._, vdom.all._
 
-sealed trait Severity
-final case object Info extends Severity
-final case object Warning extends Severity
-final case object Error extends Severity
-
-case class Position(start: Int, end: Int)
-
-case class CompilationInfo(
-  severity: Severity,
-  position: Position,
-  message: String
-)
-
 object App {
   case class State(
     code: String,
@@ -33,6 +20,14 @@ object App {
     def templateOne(e: ReactEventI)   = scope.modState(_.copy(code = "code 1"))
     def templateTwo(e: ReactEventI)   = scope.modState(_.copy(code = "code 2"))
     def templateThree(e: ReactEventI) = scope.modState(_.copy(code = "code 3"))
+    def clearError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set()))
+    def addError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(
+      CompilationInfo(
+        severity = Error,
+        position = Position(0, 10),
+        message = "foo is baz"
+      )
+    )))
   }
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
@@ -44,6 +39,8 @@ object App {
         li(button(onClick ==> backend.templateOne)("template 1")),
         li(button(onClick ==> backend.templateTwo)("template 2")),
         li(button(onClick ==> backend.templateThree)("template 3")),
+        li(button(onClick ==> backend.addError)("addError")),
+        li(button(onClick ==> backend.clearError)("clearError")),
         li(pre(state.code))
       )
     }
@@ -82,6 +79,10 @@ object Main {
   }
 }
     """
+
+  val defualtState = State(
+    code = defaultCode
+  )
 
   val component = ReactComponentB[Unit]("App")
     .initialState(State(code = defaultCode))

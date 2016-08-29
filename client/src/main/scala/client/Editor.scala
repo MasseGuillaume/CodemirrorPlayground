@@ -17,8 +17,6 @@ object Editor {
 
     val theme = if(dark) "dark" else "light"
 
-    dom.console.log(code)
-
     val isMac = dom.window.navigator.userAgent.contains("Mac")
     val ctrl = if(isMac) "Cmd" else "Ctrl"
   
@@ -111,12 +109,29 @@ object Editor {
     }
 
     def setAnnotations() = {
+      val doc = editor.getDoc()
+
       val added = next.compilationInfos -- current.compilationInfos
 
+      val toAdd = 
+        CallbackTo.sequence(
+          added.map{ info =>
+            val pos = doc.posFromIndex(info.position.end)
+            val el = dom.document.createElement("div")
+            el.textContent = info.message
+
+            CallbackTo(Line(doc.addLineWidget(pos.line, el)))
+          }
+        )
+
+      // val removed = next.compilationInfos -- current.compilationInfos
+
+      // val toRemove =
+      //   removed.flatMap(current.annotation.get)
+
+
       // Callback(
-      val removed = next.compilationInfos -- current.compilationInfos
-      // Callback(
-      scope.modState(s => s.copy(annotations = Map()))
+      toAdd >> scope.modState(s => s.copy(annotations = Map()))
     }
 
     Callback(setTheme()) >> Callback(setCode()) >> setAnnotations()

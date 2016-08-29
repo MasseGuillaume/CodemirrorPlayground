@@ -59,7 +59,7 @@ class Document protected() extends js.Object {
   def getAllMarks(): Array[TextMarker] = js.native
   def addLineClass(line: Int | LineHandle, where: String, `class`: String): LineHandle = js.native
   def removeLineClass(line: Int | LineHandle, where: String, `class`: String): LineHandle = js.native
-  def addLineWidget(line: Int | LineHandle, node: Element, options: UndefOr[js.Object]): LineWidget = js.native
+  def addLineWidget(line: Int | LineHandle, node: Element, options: UndefOr[js.Object] = undefined): LineWidget = js.native
   def getMode(): js.Object = js.native
   def lineSeparator(): Unit = js.native
   def posFromIndex(index: Int): Position = js.native
