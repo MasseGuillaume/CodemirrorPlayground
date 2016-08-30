@@ -91,7 +91,7 @@ object Editor {
 
   type Scope = CompScope.DuringCallbackM[(App.State, App.Backend), EditorState, Backend, Element]
 
-  private def runDelta(editor: CodeMirror, scope: Scope, current: App.State, next: App.State): Callback = {
+  private def runDelta(editor: CodeMirror, scope: Scope, state: EditorState, current: App.State, next: App.State): Callback = {
     def setTheme() = {
       if(current.dark != next.dark) {
         val theme = 
@@ -120,18 +120,25 @@ object Editor {
             val el = dom.document.createElement("div")
             el.textContent = info.message
 
-            CallbackTo(Line(doc.addLineWidget(pos.line, el)))
+            CallbackTo((info, Line(doc.addLineWidget(pos.line, el))))
           }
-        )
+        ).map(_.toMap)
 
-      // val removed = next.compilationInfos -- current.compilationInfos
+      val removed = current.compilationInfos -- next.compilationInfos
 
-      // val toRemove =
-      //   removed.flatMap(current.annotation.get)
-
-
-      // Callback(
-      toAdd >> scope.modState(s => s.copy(annotations = Map()))
+      val toRemove = CallbackTo.sequence(
+        state.annotations.filterKeys(removed.contains).map{
+          case (info, annot) => CallbackTo({annot.clear(); info})
+        }.toList
+      )
+      
+      for {
+        added   <- toAdd
+        removed <- toRemove
+        _       <- scope.modState(s => s.copy(annotations = 
+                    ((s.annotations ++ added) -- removed)
+                   ))
+      } yield ()
     }
 
     Callback(setTheme()) >> Callback(setCode()) >> setAnnotations()
@@ -150,7 +157,7 @@ object Editor {
       val scope = v.$
 
       state.editor.map(editor => 
-        runDelta(editor, scope, current, next)
+        runDelta(editor, scope, state, current, next)
       ).getOrElse(Callback(()))
     }
     .componentDidMount(_.backend.start())

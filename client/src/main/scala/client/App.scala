@@ -20,15 +20,17 @@ object App {
     def templateOne(e: ReactEventI)   = scope.modState(_.copy(code = "code 1"))
     def templateTwo(e: ReactEventI)   = scope.modState(_.copy(code = "code 2"))
     def templateThree(e: ReactEventI) = scope.modState(_.copy(code = "code 3"))
+
+
     def clearError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set()))
-    def addError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(
-      CompilationInfo(
-        severity = Error,
-        position = Position(0, 10),
-        message = "foo is baz"
-      )
-    )))
+    def addError(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e1, e2, e3)))
+    def addError2(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e2)))
+    def addError3(e: ReactEventI) = scope.modState(_.copy(compilationInfos = Set(e1, e3)))
   }
+
+  val e1 = CompilationInfo(severity = Error, position = Position(0, 10), message = "error: foo is baz")
+  val e2 = CompilationInfo(severity = Warning, position = Position(40, 50), message = "warning: ...")
+  val e3 = CompilationInfo(severity = Info, position = Position(60, 80), message = "info: ...")
 
   val SideBar = ReactComponentB[(State, Backend)]("SideBar")
     .render_P { case (state, backend) =>
@@ -40,6 +42,8 @@ object App {
         li(button(onClick ==> backend.templateTwo)("template 2")),
         li(button(onClick ==> backend.templateThree)("template 3")),
         li(button(onClick ==> backend.addError)("addError")),
+        li(button(onClick ==> backend.addError2)("addError2")),
+        li(button(onClick ==> backend.addError3)("addError3")),
         li(button(onClick ==> backend.clearError)("clearError")),
         li(pre(state.code))
       )
