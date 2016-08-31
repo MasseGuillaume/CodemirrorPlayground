@@ -40,9 +40,6 @@ object Editor {
       "extraKeys"                 -> js.Dictionary(
         "Tab"          -> "specialTab",
         s"$ctrl-l"     -> null,
-        s"$ctrl-Space" -> "autocomplete",
-         "."           -> "autocompleteDot",
-        s"$ctrl-."     -> "typeAt",
         s"$ctrl-Enter" -> "run",
         "F1"           -> "help",
         "F2"           -> "solarizedToggle",
@@ -104,7 +101,10 @@ object Editor {
 
     def setCode() = {
       if(current.code != next.code) {
-        editor.getDoc().setValue(next.code)
+        val doc = editor.getDoc()
+        val cursor = doc.getCursor()
+        doc.setValue(next.code)
+        doc.setCursor(cursor)
       }    
     }
 

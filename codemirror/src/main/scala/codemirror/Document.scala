@@ -27,10 +27,10 @@ class Document protected() extends js.Object {
   def getSelections(lineSep: UndefOr[String]): Array[String] = js.native
   def replaceSelection(replacement: String, select: UndefOr[String]): Unit = js.native
   def replaceSelections(replacements: Array[String], select: UndefOr[String]): Unit = js.native
-  def getCursor(start: UndefOr[String]): Position = js.native
+  def getCursor(start: UndefOr[String] = undefined): Position = js.native
   // def listSelections(): array<{anchor, head}> = js.native
   def somethingSelected(): Boolean = js.native
-  def setCursor(pos: Position | Int, ch: UndefOr[Int], options: UndefOr[js.Object]): Unit = js.native
+  def setCursor(pos: Position | Int, ch: UndefOr[Int] = undefined, options: UndefOr[js.Object] = undefined): Unit = js.native
   def setSelection(anchor: Position, head: UndefOr[Position], options: UndefOr[js.Object]): Unit = js.native
   // def setSelections(ranges: array<{anchor, head}>, primary: UndefOr[Int], options: UndefOr[js.Object]): Unit = js.native
   def addSelection(anchor: Position, head: UndefOr[Position]): Unit = js.native
